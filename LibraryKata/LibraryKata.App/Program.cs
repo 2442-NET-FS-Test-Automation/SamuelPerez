@@ -1,10 +1,15 @@
 ﻿using System.Runtime.CompilerServices;
+using Library.Domain;
+using LibraryKata;
 
 namespace LibraryKata.App;
 public class Program
 {
     public static void Main()
-    {        
+    {
+        DataTypeAndOperators();
+        ClassesExample();
+        OopDemo();
     }
 
     private static void DataTypeAndOperators()
@@ -92,5 +97,54 @@ public class Program
         {
             Console.WriteLine(book);
         }
+    }
+
+    public static void ClassesExample()
+    {
+        Console.WriteLine("Using our domain Book Class.");
+
+        OldBook dune = new OldBook("Dune", "Luis", 3);
+        OldBook littlePrince = new OldBook("Little Prince", "Antoine de Saint-Exupéry", 0);
+
+        Console.WriteLine(dune);
+
+        Console.WriteLine($"Checking out Dune: {Convert.ToString(dune.CheckOut)}");
+        Console.WriteLine($"Checking out Little Prince: {littlePrince.CheckOut}");
+    } 
+
+    public static void OopDemo()
+    {
+        Console .WriteLine("\n\n == OOP Demo ==");
+
+        LibraryItem[] catalog =
+        {
+            new Book("Dune", "Frank", 2),
+            new ReferenceBook("C# Language Standards", "Microsoft", "Technology"),
+            new Magazine("Sports Illustrated", "Conde Naste", 5)
+        };
+
+        foreach (LibraryItem item in catalog)
+        {
+            Console.WriteLine(item.Describe());
+        }
+
+        foreach (LibraryItem item in catalog)
+        {
+            if (item is ILendable lendable)
+            {
+                Console.WriteLine($"{item.Title}: checkout -> {lendable.CheckOut()}");
+            } else
+            {
+                Console.WriteLine($"{item.Title} is Reference only.");
+            }
+        }
+
+        Magazine wired = new Magazine("Wired", "Conde Nast", 3);
+        LibraryItem baseMag = wired;
+
+        Console.WriteLine("== Override vs new on the same object, different ref type");
+        Console.WriteLine($"Magazine reference -> {wired.Describe()}");
+        Console.WriteLine($"LibraryItem reference -> {baseMag.Describe}");
+
     }
 }
