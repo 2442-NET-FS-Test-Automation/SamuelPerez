@@ -36,6 +36,23 @@ public class SavingsAccount : Account, ITransferable
         }
     }
 
+    public void Transfer(Account destinationAccount, decimal amount, string message)
+    {
+        if (amount > 0 && amount <= Balance)
+        {
+            this.Withdraw(amount);
+            destinationAccount.Deposit(amount);
+            Console.WriteLine($"""
+            Succesful transfer to {destinationAccount.Client}
+            Concept message: {message}
+            """);
+        }
+        else
+        {
+            Console.WriteLine("Not enough funds!");
+        }
+    }
+
     public override string ListInformation()
     {
         return $"""
