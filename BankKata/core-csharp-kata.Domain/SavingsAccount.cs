@@ -36,5 +36,17 @@ public class SavingsAccount : Account, ITransferable
         }
     }
 
+    public override string ListInformation()
+    {
+        return $"""
+
+        ====== No.:{NumberAccount} ======
+        Type: Savings Account.
+        Client: {Client}
+        Balanace: {Balance}
+        Interest Rate: {InterestRate}
+        """;
+    }
+
     #endregion Methods
 }

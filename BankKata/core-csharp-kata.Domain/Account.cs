@@ -41,6 +41,9 @@ public abstract class Account
         }
     }
 
+    public abstract string ListInformation();
+    public override string ToString() => ListInformation();
+
     #endregion Methods
 
 }

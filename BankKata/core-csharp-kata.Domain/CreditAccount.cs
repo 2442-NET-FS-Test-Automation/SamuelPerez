@@ -27,6 +27,18 @@ public class CreditAccount : Account
         }
     }
 
+    public override string ListInformation()
+    {
+        return $"""
+
+        ====== No.:{NumberAccount} ======
+        Type: Credit Account.
+        Client: {Client}
+        Balanace: {Balance}
+        Credit Line: {CreditLine}
+        """;
+    }
+
     #endregion Methods
 
 }
