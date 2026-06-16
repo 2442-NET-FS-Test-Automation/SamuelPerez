@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="core-csharp-kata.App/core-csharp-kata.App.csproj" />
+  <Project Path="core-csharp-kata.Domain/core-csharp-kata.Domain.csproj" />
+</Solution>
