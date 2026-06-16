@@ -15,9 +15,9 @@ public class SavingsAccount : Account, ITransferable
     #endregion Constructor
 
     #region Methods
-    public void ApplyInterest()
+    public void ApplyInterest(decimal amount)
     {
-        decimal interest = Balance * InterestRate;
+        decimal interest = (InterestRate * Balance) + amount;
         Deposit(interest);
         Console.WriteLine($"Applied interest. New balance is: {Balance:C}");
     }
@@ -45,6 +45,7 @@ public class SavingsAccount : Account, ITransferable
             Console.WriteLine($"""
             Succesful transfer to {destinationAccount.Client}
             Concept message: {message}
+
             """);
         }
         else
@@ -57,7 +58,7 @@ public class SavingsAccount : Account, ITransferable
     {
         return $"""
 
-        ====== No.:{NumberAccount} ======
+        ====== No.: {NumberAccount} ======
         Type: Savings Account.
         Client: {Client}
         Balanace: {Balance}

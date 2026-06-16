@@ -24,7 +24,7 @@ public abstract class Account
         if (amount > 0)
         {
             Balance += amount;
-            Console.WriteLine($"Success! This is your new balance: {Balance}!");
+            Console.WriteLine($"Success! This is your new balance: {Balance:C}!");
         }
     }
     
@@ -33,7 +33,7 @@ public abstract class Account
         if (amount > 0 && Balance >= amount)
         {
             Balance -= amount;
-            Console.WriteLine($"Success! This is your new balance: {Balance}!");
+            Console.WriteLine($"Success! This is your new balance: {Balance:C}!");
         }
         else
         {

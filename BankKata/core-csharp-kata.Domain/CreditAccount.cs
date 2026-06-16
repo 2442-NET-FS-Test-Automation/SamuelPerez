@@ -19,7 +19,7 @@ public class CreditAccount : Account
         if (amount > 0 && (Balance - amount) >= -CreditLine)
         {
             Balance -= amount;
-            Console.WriteLine($"Withdrawal with credit applied. New balance: {Balance}");
+            Console.WriteLine($"Withdrawal with credit applied. New balance: {Balance:C}");
         }
         else
         {
@@ -31,11 +31,12 @@ public class CreditAccount : Account
     {
         return $"""
 
-        ====== No.:{NumberAccount} ======
+        ====== No.: {NumberAccount} ======
         Type: Credit Account.
         Client: {Client}
         Balanace: {Balance}
         Credit Line: {CreditLine}
+
         """;
     }
 
