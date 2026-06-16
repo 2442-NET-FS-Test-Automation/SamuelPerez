@@ -10,6 +10,7 @@ public class Program
         DataTypeAndOperators();
         ClassesExample();
         OopDemo();
+        CollectionsDemo();
     }
 
     private static void DataTypeAndOperators()
@@ -147,4 +148,40 @@ public class Program
         Console.WriteLine($"LibraryItem reference -> {baseMag.Describe}");
 
     }
+
+    #region CollectionsDemo
+    private static void CollectionsDemo()
+    {
+        Console.WriteLine("==== Demo Stuff ====");
+
+        Catalog catalog = new();
+
+        Book dune = new Book("Dune", "Frank Herbert", 3);
+        catalog._items.Add(dune);
+
+        catalog._items.Add(new ReferenceBook("C# Language Specs", "Microsoft", "Technology"));
+        catalog._items.Add(new Magazine("Nat Geo", "Charlie", 4));
+
+        Console.WriteLine($"Catalog holds {catalog._items.Count}, first is {catalog._items[0].Title}");
+
+        ItemKind kind = ItemKind.Magazine;
+
+        ShelfLocation location = new ShelfLocation(3, 12);
+
+        Console.WriteLine($"{kind} sits at {location}");
+
+        Shelf<LibraryItem> shelf = new Shelf<LibraryItem>(2);
+        Shelf<int> intShelf = new Shelf<int>(200);
+
+        shelf.TryAdd(catalog._items[0]);
+        shelf.TryAdd(catalog._items[1]);
+
+        Console.WriteLine($"Trying to add a third thing in our catalog: {shelf.TryAdd(catalog._items[2])}");
+
+
+
+
+
+    }
+    #endregion CollectionsDemo
 }
