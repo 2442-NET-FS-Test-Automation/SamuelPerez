@@ -1,16 +1,28 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using Library.Domain;
 using LibraryKata;
+using Serilog;
 
 namespace LibraryKata.App;
 public class Program
 {
     public static void Main()
     {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .CreateLogger();
+
+
         DataTypeAndOperators();
         ClassesExample();
         OopDemo();
         CollectionsDemo();
+        ExceptionsDemo();
+
+
+        Log.CloseAndFlush();
     }
 
     private static void DataTypeAndOperators()
@@ -184,4 +196,64 @@ public class Program
 
     }
     #endregion CollectionsDemo
+
+    #region ExcepcionsDEmo
+    public static void ExceptionsDemo()
+    {
+        Console.WriteLine("\n == Exceptions, patterns, logging ==");
+
+        ILabraryRepository repo = new InMemoryLibraryRepository();
+
+        IUnitOfWork libraryWork = new LibraryUnitOfWork(repo);
+
+        LibraryItem dune = LibraryItemFactory.Create(ItemKind.Book, "Dune", "Frank Herbert", copies: 3);
+
+        repo.Add(dune);
+        repo.Add(LibraryItemFactory.Create(ItemKind.Magazine, "Wired", "Axel", copies: 2));
+
+        libraryWork.Stage("Added 2 times");
+        libraryWork.Commit();
+
+        try
+        {
+            LibraryItem missing = repo.GetById(99);
+            Console.WriteLine(missing.Describe());
+        }catch(ItemNotFoundException ex)
+        {
+            Log.Error("Lookup failed for id {Id}: {Message}", ex.Id, ex.Message);
+        } catch (LibraryException ex)
+        {
+            Log.Error("Library error: {}", ex.Message);
+        } catch (Exception ex)
+        {
+            Log.Error("Non Library error: {Message}", ex.Message);
+        }
+        finally
+        {
+            Console.WriteLine("Hit out finally block - lookup attempt done.");
+        }
+
+
+        Book noCopies = new Book("Count of Montecristo", "Alejandro Dumas", 0);
+
+        try
+        {
+            Borrow(noCopies);
+        }
+        catch(ItemNotAvailableException ex)
+        {
+            Log.Warning("Borrow refused: {Message}", ex.Message);
+        }
+
+        
+    }
+    #endregion ExcepcionsDEmo
+
+    public static void Borrow(Book book)
+    {
+        if (!book.CheckOut())
+        {
+            throw new ItemNotAvailableException(book.Title);
+        }
+    }
 }
