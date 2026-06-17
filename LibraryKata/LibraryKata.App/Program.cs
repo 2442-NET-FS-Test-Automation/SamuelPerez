@@ -20,6 +20,7 @@ public class Program
         OopDemo();
         CollectionsDemo();
         ExceptionsDemo();
+        AdvancedClassesDemo();
 
 
         Log.CloseAndFlush();
@@ -256,4 +257,47 @@ public class Program
             throw new ItemNotAvailableException(book.Title);
         }
     }
+
+    #region AdvancedClassesDemo
+    public static void AdvancedClassesDemo()
+    {
+        Console.WriteLine("\n == Advanced classes ==");
+
+        Console.WriteLine(GC.GetTotalMemory(forceFullCollection: false) / 1024);
+
+
+        ILabraryRepository repo = new InMemoryLibraryRepository();
+
+        LibraryItem dune = LibraryItemFactory.Create(ItemKind.Book, "Dune", "Frank Herbert", copies: 3);
+
+        repo.Add(dune);
+        repo.Add(LibraryItemFactory.Create(ItemKind.Magazine, "Wired", "Axel", copies: 2));
+        repo.Add(LibraryItemFactory.Create(ItemKind.Book, "Dune Mesiah", "Frank Herbert", copies: 3));
+        repo.Add(LibraryItemFactory.Create(ItemKind.ReferenceBook, "C# Language Reference", "Microsoft", copies: 1, "Technology"));
+
+        Catalog catalog = new();
+
+        foreach(LibraryItem item in repo.GetAll())
+        {
+            catalog.Add(item);
+        }
+
+        Console.WriteLine($"We have {catalog.Authors.Count} unique authors in our catalog.");
+
+        foreach (string author in catalog.Authors)
+            Console.WriteLine(author);
+        
+        List<LibraryItem> byFrankHerbert = catalog.Find(item => item.Author == "Frank Herbert");
+        Console.WriteLine($"There are {byFrankHerbert.Count} books by Frank Herbert");
+
+        Console.WriteLine("We have a mix of lendable and non-lendable items.");
+
+        foreach(LibraryItem item in catalog.Lendable())
+        {
+            Console.WriteLine($"{item.Title}");
+        }
+
+    }
+
+    #endregion AdvancedClassesDemo
 }

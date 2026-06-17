@@ -1,6 +1,6 @@
 namespace Library.Domain;
 
-public class Magazine : LibraryItem, ILendable
+public sealed class Magazine : LibraryItem, ILendable
 {
     public int CirculationCopies {get; private set;}
 

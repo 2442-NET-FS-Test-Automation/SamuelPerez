@@ -1,6 +1,6 @@
 namespace Library.Domain;
 
-public class Book : LibraryItem
+public class Book : LibraryItem, ILendable
 {
     public int CopiesAvailable {get; private set;}
 
