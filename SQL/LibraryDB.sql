@@ -604,3 +604,101 @@ JOIN dbo.Book b ON b.BookId = l.BookId
 Join dbo.Category c ON c.CategoryId = b.CategoryId
 WHERE l.ReturnDate IS NULL
 ORDER BY DaysOverdue DESC;
+GO
+
+-- TRANSACTIONS --
+SET XACT_ABORT ON;
+
+
+BEGIN TRY
+    BEGIN TRANSACTION
+        INSERT INTO Loan(BookId, MemberId, DueDate)
+        VALUES (6, 2, DATEADD(DAY, 14, GETDATE()))
+
+
+        UPDATE Book SET AvailableCopies = AvailableCopies - 1 WHERE BookId = 6;
+    COMMIT TRANSACTION
+    PRINT 'Checkout COMMITTED'
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+    PRINT 'Checkout ROLLED BACK: ' + ERROR_MESSAGE();
+END CATCH;
+
+GO
+
+
+-- UPDATE Book SET AvailableCopies = 0 where BookId = 6;
+
+-- ALTER TABLE Book
+-- ADD CONSTRAINT CK_Book_Min_AvailableCopies
+-- CHECK (AvailableCopies >= 0)
+
+
+
+CREATE OR ALTER VIEW dbo.vw_ActiveLoans
+AS
+    SELECT m.FirstName + '' + m.LastName AS Member,
+        b.Title,
+        c.Name AS Category,
+        l.DueDate,
+        DATEDIFF(Day, l.DueDate, GETDATE()) AS DaysOverdue
+FROM dbo.Loan AS l
+JOIN dbo.Member m ON m.MemberId = l.MemberId
+JOIN dbo.Book b ON b.BookId = l.BookId
+Join dbo.Category c ON c.CategoryId = b.CategoryId
+WHERE l.ReturnDate IS NULL;
+
+GO
+
+SELECT * FROM vw_ActiveLoans ORDER BY DueDate;
+
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_CheckoutBook
+    @BookId INT,
+    @MemberId INT,
+    @DAYS INT = 14
+
+AS
+BEGIN
+    SET XACT_ABORT ON;
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        BEGIN TRANSACTION
+            IF (SELECT AvailableCopies FROM Book WHERE BookId = @BookId) <= 0
+            THROW 5000, 'No copies available to check out.', 1;
+
+            INSERT INTO Loan (BookId, MemberId, DueDate)
+            VALUES (@BookId, @MemberId, DATEADD(DAY, @DAYS, GETDATE()));
+
+            UPDATE Book SET AvailableCopies = AvailableCopies - 1 WHERE BookId = @BookId;
+        COMMIT TRANSACTION
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+
+
+SELECT * FROM Loan;
+
+GO
+
+CREATE OR ALTER FUNCTION dbo.fn_DaysOverDue (@dueDate DATE)
+RETURNS INT 
+AS
+BEGIN
+    DECLARE @days INT = DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE));
+
+    RETURN CASE WHEN @days > 0 THEN @days ELSE 0 END;
+END;
+
+GO
+
+SELECT b.Title, l.DueDate, dbo.fn_DaysOverdue(DueDate) AS DaysOverDue
+FROM dbo.Loan l
+JOIN Book b ON b.BookId = l.BookId
+WHERE ReturnDate IS NULL;
