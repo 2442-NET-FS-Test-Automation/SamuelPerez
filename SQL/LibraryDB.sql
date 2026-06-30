@@ -702,3 +702,5 @@ SELECT b.Title, l.DueDate, dbo.fn_DaysOverdue(DueDate) AS DaysOverDue
 FROM dbo.Loan l
 JOIN Book b ON b.BookId = l.BookId
 WHERE ReturnDate IS NULL;
+
+CREATE INDEX IX_Loan_MemberId ON dbo.Loan (MemberId)
