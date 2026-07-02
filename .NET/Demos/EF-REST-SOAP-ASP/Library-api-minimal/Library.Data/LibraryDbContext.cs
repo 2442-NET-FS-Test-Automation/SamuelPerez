@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Library.Data.Entities;
 using Library.Data;
 using System.Data.Common;
+using System.IO.Compression;
 
 namespace Library.Data;
 
@@ -11,6 +12,11 @@ public class LibraryDbContext : DbContext
 
     public DbSet<Product> Products => Set<Product>();
     public DbSet<InventoryItem> Inventory => Set<InventoryItem>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderLine> OrderLines => Set<OrderLine>();
+    public DbSet<FulfillmentEvent> FulfillmentEvents => Set<FulfillmentEvent>();
+
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -25,6 +31,11 @@ public class LibraryDbContext : DbContext
                 .HasForeignKey<InventoryItem>(i => i.ProductId); 
         });
 
+        b.Entity<InventoryItem>().Property(i => i.RowVersion).IsRowVersion();
+
+        b.Entity<Customer>().Property(c => c.Email).HasMaxLength(256);
+        b.Entity<Customer>().HasIndex(c => c.Email).IsUnique();
+
 
         b.Entity<Product>().HasData(
             new Product { Id = 1, Sku = "BK-001", Name = "Clean Code", Price = 32.00m},
@@ -38,6 +49,11 @@ public class LibraryDbContext : DbContext
             new InventoryItem { Id = 2, ProductId = 2, CurrentStock = 3},
             new InventoryItem { Id = 3, ProductId = 3, CurrentStock = 8}
 
+        );
+
+        b.Entity<Customer>().HasData(
+            new Customer { Id = 1, Name = "Ada Lovelace", Email = "ada@example.com"},
+            new Customer { Id = 2, Name = "Alan Turing", Email = "alan@example.com"}
         );
 
     }
