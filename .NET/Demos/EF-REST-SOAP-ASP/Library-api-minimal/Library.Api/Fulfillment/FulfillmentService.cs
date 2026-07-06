@@ -7,7 +7,8 @@ namespace Library.Api.Fulfillment;
 
 public interface IFulfillmentService
 {
-    public  Task<FulfillmentResult> FulfillOneAsync(int orderId, CancellationToken ct);
+    public Task<FulfillmentResult> FulfillOneAsync(int orderId, CancellationToken ct);
+    public Task<BurstResult> FulfillBurstAsync(IEnumerable<int> orderIds, CancellationToken ct);
 }
 
 public enum FulfillmentResult { Fulfilled, Backordered }
@@ -17,10 +18,12 @@ public record BurstResult (int Fulfilled, int Backordered);
 public class FulfillmentService : IFulfillmentService
 {
     private readonly IDbContextFactory<LibraryDbContext> _factory;
+    private readonly BurstPlanner _planner;
 
-    public FulfillmentService(IDbContextFactory<LibraryDbContext> factory)
+    public FulfillmentService(IDbContextFactory<LibraryDbContext> factory, BurstPlanner planner)
     {
         _factory = factory;
+        _planner = planner;
     }
 
     public async Task<FulfillmentResult> FulfillOneAsync(int orderId, CancellationToken ct)
@@ -29,7 +32,7 @@ public class FulfillmentService : IFulfillmentService
 
         var order = await db.Orders.Include(o => o.Lines).FirstAsync(o => o.Id == orderId, ct);
         
-        var requested = order.Lines.ToDictionary(l => l.ProductId, l => l.OrderId);
+        var requested = order.Lines.ToDictionary(l => l.ProductId, l => l.Quantity);
 
         bool canFulfill = true;
 
@@ -79,13 +82,13 @@ public class FulfillmentService : IFulfillmentService
     private static async Task<bool> SaveWithRetryAsync(
         LibraryDbContext db, IReadOnlyDictionary<int, int> requestedByProductId, CancellationToken ct)
     {
-        for (int attempt = 0; ; attempt++)
+        while (true)
         {
             try
             {
                 await db.SaveChangesAsync(ct);
                 return true;
-            } catch( DbUpdateConcurrencyException ex) when (attempt < 3)
+            } catch( DbUpdateConcurrencyException ex)
             {
                 foreach (var entry in ex.Entries)
                 {
@@ -101,11 +104,35 @@ public class FulfillmentService : IFulfillmentService
 
                         int desiredAmount = requestedByProductId[inv.ProductId];
 
-                        if (freshValue > desiredAmount) return false;
+                        if (freshValue < desiredAmount) return false;
                         inv.CurrentStock = freshValue - desiredAmount;
                     }
                 }
             }
         }
     }
+
+    public async Task<BurstResult> FulfillBurstAsync(IEnumerable<int> orderIds, CancellationToken ct)
+    {
+        List<int> idList = orderIds.ToList();
+
+        List<Order> orders;
+
+        await using(var db = await _factory.CreateDbContextAsync(ct))
+        {
+            orders = await db.Orders.Where(o => idList.Contains(o.Id)).ToListAsync();
+        }
+
+        var planned = _planner.OrderByPriority(orders);
+        
+        var tasks = planned.Select(id => FulfillOneAsync(id, ct));
+
+        var results = await Task.WhenAll(tasks);
+
+        return new BurstResult(
+            Fulfilled: results.Count(r => r == FulfillmentResult.Fulfilled),
+            Backordered: results.Count(r => r == FulfillmentResult.Backordered)
+        );
+    }
+
 }

@@ -3,6 +3,7 @@ using Library.Data;
 using Library.Data.Entities;
 using Serilog;
 using Library.Api.Fulfillment;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,12 +14,15 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File("logs/fulfillment-log.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
+builder.Host.UseSerilog();
+
 builder.Services.AddDbContext<LibraryDbContext>(options => options.UseSqlServer(conn_string),
     ServiceLifetime.Scoped, ServiceLifetime.Singleton);
 builder.Services.AddDbContextFactory<LibraryDbContext>(options => options.UseSqlServer(conn_string));
 
 builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
-
+builder.Services.AddScoped<ISeeder, Seeder>();
+builder.Services.AddScoped<BurstPlanner>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -56,6 +60,7 @@ app.MapGet("/peek/tracking", (LibraryDbContext db) => {
     var states = db.ChangeTracker.Entries()
         .Select(e => new {entity = e.Entity.GetType().Name, state = e.State.ToString()})
         .ToList();
+	db.SaveChanges();
     db.ChangeTracker.Clear();
 
     return states;
@@ -93,7 +98,7 @@ app.MapGet("/peek/conflict", (IServiceScopeFactory scopes) =>
         secondDb.SaveChanges();
     }
 
-    return Results.Ok("Conflic caught, reloaded and retried.");
+    return Results.Ok("Conflict caught, reloaded and retried.");
 
 });
 
@@ -142,6 +147,89 @@ app.MapPost("/Orders", async (OrderPayload orderRequest, IDbContextFactory<Libra
     FulfillmentResult result = await fSvc.FulfillOneAsync(newOrder.Id, ct);
 
     return Results.Ok(new {orderId = newOrder.Id, result = result.ToString()});
+});
+
+app.MapPost("/orders/burst", (int n, bool expedited, ISeeder seeder, 
+    IServiceScopeFactory scopes, IHostApplicationLifetime lifetime) =>
+{
+    var ids = seeder.SeedOrders(n, expedited);
+    var appStopping = lifetime.ApplicationStopping;
+
+    _ = Task.Run( async () =>
+    {
+        try
+        {
+            using var scope = scopes.CreateScope();
+            var service = scope.ServiceProvider.GetRequiredService<IFulfillmentService>();
+            await service.FulfillBurstAsync(ids, appStopping);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Burst fulfillment failed");
+        }
+    }, appStopping);
+});
+
+app.MapGet("/verify/no-oversell", (LibraryDbContext db) =>
+{
+    var rows = db.Inventory.Include(i => i.Product).ToList();
+    var negative = rows.Where(i => i.CurrentStock < 0).ToList();
+    var fulfilled = db.FulfillmentEvents.Count(e => e.Type == "Fulfilled");
+
+    return new
+    {
+        anyNegative = negative.Any(),
+        onHand = rows.Select(i => new {i.ProductId, i.CurrentStock}),
+        unitsFulfilled = fulfilled
+    };
+});
+
+app.MapPost("/benchmark", async (int n, IFulfillmentService fs, ISeeder seeder, CancellationToken ct) =>
+{
+    var ids1 = seeder.ResetAndCreateOrders(n);
+
+    var sw1 = Stopwatch.StartNew();
+
+    foreach (var id in ids1)
+    {
+        await fs.FulfillOneAsync(id, ct);
+    }
+    sw1.Stop();
+
+    var ids2 = seeder.ResetAndCreateOrders(n);
+
+    var sw2 = Stopwatch.StartNew();
+
+    await fs.FulfillBurstAsync(ids2, ct);
+    sw2.Stop();
+
+    return new
+    {
+        sequentialMs = sw1.ElapsedMilliseconds,
+        concurrentMs = sw2.ElapsedMilliseconds
+    };
+});
+
+app.MapGet("/reports/by-completion", (LibraryDbContext db) =>
+{
+    return db.Orders
+        .Where(o => o.Status == Status.Fulfilled)
+        .OrderBy(o => o.CompletedUtc)
+        .Select(o => new {o.Id, o.Priority, o.CompletedUtc})
+        .ToList();
+});
+
+
+app.MapGet("/reports/top-products", (LibraryDbContext db) =>
+{
+    var ranked = db.FulfillmentEvents
+        .Where(e => e.Type == "Fulfilled")
+        .Join(db.OrderLines, e => e.OrderId, l => l.OrderId, (e, l) => l)
+        .GroupBy(l => l.ProductId)
+        .Select(g => new { ProductId = g.Key, Units = g.Sum(l => l.Quantity)})
+        .OrderByDescending(x => x.Units)
+        .ToList();
+    return ranked;
 });
 
 app.Run();
