@@ -1,0 +1,45 @@
+erDiagram
+    PATIENT ||--|{ APPOINTMENTORDER : places
+    CLINICALSTUDY ||--|| DISPONIBILITY : contains
+    APPOINTMENTDETAILS }|--|| CLINICALSTUDY : contains
+    APPOINTMENTORDER ||--|{ APPOINTMENTDETAILS : includes
+    EVENTLOG ||--|{ APPOINTMENTORDER : contains
+    PATIENT {
+        int PatientId
+        nvarchar FirstName
+        nvarchar LastName
+        nvarchar Email
+        Date BirthDate
+    }
+    CLINICALSTUDY {
+        varchar LOINC
+        nvarchar TestName
+        nvarchar Description
+    }
+    DISPONIBILITY {
+        int DisponibilityId
+        varchar LOINC
+        int DurationMinutes
+        int Slots
+        byte[] Rowversion
+    }
+    APPOINTMENTORDER {
+        int OrderId
+        int PatientId
+        int PriorityId
+        int StatusId
+        datetime2 CreatedUTC
+        datetime2 CompletedUTC
+    }
+    APPOINTMENTDETAILS {
+        int DetailsId
+        int OrderId
+        varchar LOINC
+        int Quantity
+    }
+    EVENTLOG {
+        int LogId
+        int OrderId
+        text Description
+        timestamp timestamp
+    }
