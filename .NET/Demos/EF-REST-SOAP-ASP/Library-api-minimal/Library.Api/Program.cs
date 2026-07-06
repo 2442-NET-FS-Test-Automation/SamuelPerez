@@ -1,12 +1,24 @@
 using Microsoft.EntityFrameworkCore;
 using Library.Data;
 using Library.Data.Entities;
+using Serilog;
+using Library.Api.Fulfillment;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var conn_string = "Server=localhost,1433;Database=LibraryMinimalDb;User ID=sa;Password=LibraryPass1!;TrustServerCertificate=True";
+var conn_string = "Server=localhost,1433;Database=LibraryMinimalDb;User ID=sa;Password=LibraryPass1!;TrustServerCertificate=True"; //gitignoreline
 
-builder.Services.AddDbContext<LibraryDbContext>(options => options.UseSqlServer(conn_string));
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/fulfillment-log.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Services.AddDbContext<LibraryDbContext>(options => options.UseSqlServer(conn_string),
+    ServiceLifetime.Scoped, ServiceLifetime.Singleton);
+builder.Services.AddDbContextFactory<LibraryDbContext>(options => options.UseSqlServer(conn_string));
+
+builder.Services.AddScoped<IFulfillmentService, FulfillmentService>();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -85,4 +97,54 @@ app.MapGet("/peek/conflict", (IServiceScopeFactory scopes) =>
 
 });
 
+app.MapPost("/inventory/rest", (LibraryDbContext db, ILogger<Program> logger) =>
+{
+    logger.LogInformation("Started seeing database");
+    foreach (InventoryItem inv in db.Inventory)
+    {
+        switch (inv.Id)
+        {
+            case 1:
+                inv.CurrentStock = 5;
+                break;
+            case 2:
+                inv.CurrentStock = 3;
+                break;
+            case 3:
+                inv.CurrentStock = 8;
+                break;
+            default:
+                break;
+        }
+    }
+
+    db.SaveChanges();
+    logger.LogInformation("Stock reset");
+    return Results.Ok("stock reset");
+});
+
+
+app.MapPost("/Orders", async (OrderPayload orderRequest, IDbContextFactory<LibraryDbContext> factory,
+    CancellationToken ct, IFulfillmentService fSvc) =>
+{
+    await using var db = await factory.CreateDbContextAsync(ct);
+
+    var newOrder = new Order
+    {
+        CustomerId = orderRequest.CustomerId,
+        Priority = Priority.Normal,
+        Lines = {new OrderLine {ProductId = orderRequest.ProductId, Quantity = orderRequest.Quantity}}
+    };
+
+    db.Orders.Add(newOrder);
+    await db.SaveChangesAsync(ct);
+
+    FulfillmentResult result = await fSvc.FulfillOneAsync(newOrder.Id, ct);
+
+    return Results.Ok(new {orderId = newOrder.Id, result = result.ToString()});
+});
+
 app.Run();
+
+Log.CloseAndFlush();
+public record OrderPayload(int ProductId, int Quantity, int CustomerId);
