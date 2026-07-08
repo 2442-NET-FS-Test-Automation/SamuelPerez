@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MedicLab.Api/MedicLab.Api.csproj" />
+  <Project Path="MedicLab.Data/MedicLab.Data.csproj" />
+</Solution>
