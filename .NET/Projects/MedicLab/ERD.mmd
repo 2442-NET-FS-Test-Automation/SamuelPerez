@@ -1,45 +1,68 @@
 erDiagram
-    PATIENT ||--|{ APPOINTMENTORDER : places
-    CLINICALSTUDY ||--|| DISPONIBILITY : contains
-    APPOINTMENTDETAILS }|--|| CLINICALSTUDY : contains
-    APPOINTMENTORDER ||--|{ APPOINTMENTDETAILS : includes
-    EVENTLOG ||--|{ APPOINTMENTORDER : contains
-    PATIENT {
+    PATIENTS ||--|{ APPOINTMENTORDERS : places
+    CLINICALSTUDIES ||--|{ AVAILABILITY : contains
+    APPOINTMENTDETAILS }|--|| CLINICALSTUDIES : contains
+    APPOINTMENTORDERS ||--|{ APPOINTMENTDETAILS : includes
+    EVENTLOGS ||--|| APPOINTMENTORDERS : contains
+    DOCTORS ||--|{ APPOINTMENTORDERS : inCharge
+    FULFILLMENTEVENTS ||--|| APPOINTMENTORDERS : contains
+    PATIENTS {
         int PatientId
+        nvarchar CURP
+        nvarchar Email
         nvarchar FirstName
         nvarchar LastName
-        nvarchar Email
         Date BirthDate
     }
-    CLINICALSTUDY {
+    DOCTORS{
+        int DoctorId
+        nvarchar FirstName
+        nvarchar LastName
+        nvarchar MedicalLicense
+    }
+    CLINICALSTUDIES {
+        int ClinicalStudyId
         varchar LOINC
-        nvarchar TestName
+        nvarchar StudyName
         nvarchar Description
     }
-    DISPONIBILITY {
-        int DisponibilityId
-        varchar LOINC
+    AVAILABILITY {
+        int AvailabilityId
+        int ClinicalStudyId
         int DurationMinutes
         int Slots
+        Date Day
         byte[] Rowversion
     }
-    APPOINTMENTORDER {
+    APPOINTMENTORDERS {
         int OrderId
         int PatientId
-        int PriorityId
-        int StatusId
+        int DoctorId
+        int Priority
+        int Status
         datetime2 CreatedUTC
         datetime2 CompletedUTC
     }
     APPOINTMENTDETAILS {
-        int DetailsId
-        int OrderId
-        varchar LOINC
+        int AppointmentDetailId
+        int AppointmentOrderId
+        int ClinicalStudyId
         int Quantity
+        Date Date
     }
-    EVENTLOG {
-        int LogId
-        int OrderId
-        text Description
-        timestamp timestamp
+    FULFILLMENTEVENTS{
+        int FulfillmentEventId
+        int AppointmentOrderId
+        nvarchar Type
+        datetime2 FulfilledAtUtc
+    }
+    EVENTLOGS {
+        int EventLogId
+        int AppointmentOrderId
+        nvarchar Message
+        nvarchar MessageTemplate
+        nvarchar Level
+        datetime2 TimeStamp
+        nvarchar Exception
+        nvarchar Properties
     }
