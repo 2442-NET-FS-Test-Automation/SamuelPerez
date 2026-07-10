@@ -1,5 +1,6 @@
 using MedicLab.Api.Fulfillment;
 using MedicLab.Data;
+using MedicLab.Data.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -102,6 +103,24 @@ app.MapPost("/appointmentOrders/burst", (int burstAmount, bool expedited, ISeede
 
     return Results.Accepted("Request received");
 });
+
+app.MapGet("reports/fulfillment-rate", async (MedicLabDbContext db) =>
+{
+    var report = await db.AppointmentOrders
+                        .Where(ao => ao.Status == Status.Completed || ao.Status == Status.Backordered)
+                        .GroupBy(_ => 1)
+                        .Select(g => new 
+                        {
+                            TotalProcessOrders = g.Count(),
+                            FulfilledOrders = g.Sum(ao => ao.Status == Status.Completed ? 1 : 0),
+                            BackorderedOrders = g.Sum(ao => ao.Status == Status.Backordered ? 1 : 0)
+                        })
+                        .FirstOrDefaultAsync();
+    
+    return report ?? new { TotalProcessOrders = 0, FulfilledOrders = 0, BackorderedOrders = 0 };
+});
+
+
 
 app.Run();
 Log.CloseAndFlush();
