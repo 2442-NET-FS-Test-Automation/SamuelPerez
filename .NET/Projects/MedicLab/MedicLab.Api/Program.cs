@@ -64,9 +64,21 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => "Welcome to a Medical Laboratory!");
 
-
+app.MapGet("/inventory", async (MedicLabDbContext db) =>
+{
+    return await db.Availability.Where(a => a.Day >= DateTime.Today)
+                                .Join(db.ClinicalStudies, a => a.ClinicalStudyId, cs => cs.ClinicalStudyId, (a, cs) => new { a, cs })
+                                .GroupBy(x => new { x.cs.LOINC, x.cs.StudyName },
+                                        x => x.a.Slots)
+                                .Select(b => new
+                                {
+                                    b.Key.LOINC,
+                                    b.Key.StudyName,
+                                    TotalSlots = b.Sum()
+                                }).ToListAsync();
+});
 
 app.MapPost("/appointmentOrders/burst", (int burstAmount, bool expedited, ISeeder seeder, 
     IServiceScopeFactory scopes, IHostApplicationLifetime lifetime) =>
