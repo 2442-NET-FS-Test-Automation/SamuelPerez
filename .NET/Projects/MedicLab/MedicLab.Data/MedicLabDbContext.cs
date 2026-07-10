@@ -37,11 +37,12 @@ public class MedicLabDbContext : DbContext
         {
             e.ToTable(a => a.HasCheckConstraint("CK_ClinicalStudies_AvailableDays", "[Day] >= CONVERT(date, GETDATE())"));
             e.Property(a => a.RowVersion).IsRowVersion();
+            e.HasIndex(a => new { a.ClinicalStudyId, a.Day}).IsUnique();
         });
 
         b.Entity<Patient>().HasData(
             new Patient { PatientId = 1, CURP = "PEAS030328HJCRLMA4", Email = "Samuelpalfaro@gmail.com", FirstName = "Samuel", LastName = "Pérez", BirthDate = new DateTime(2003, 03, 28) },
-            new Patient { PatientId = 2, CURP = "SABC5560626MDFLRN09", Email = "Concepcion@mail.com", FirstName = "Concepción", LastName = "Salgado", BirthDate = new DateTime(1956, 06, 26) }
+            new Patient { PatientId = 2, CURP = "SABC5560626MDFLRN0", Email = "Concepcion@mail.com", FirstName = "Concepción", LastName = "Salgado", BirthDate = new DateTime(1956, 06, 26) }
         );
 
         b.Entity<Doctor>().HasData(

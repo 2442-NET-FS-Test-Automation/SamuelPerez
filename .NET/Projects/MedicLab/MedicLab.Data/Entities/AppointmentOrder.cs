@@ -22,5 +22,5 @@ public class AppointmentOrder
 
     public List<AppointmentDetail> Details {get; set;} = new();
     public FulfillmentEvent? FulfillmentEvent {get; set;}
-    public EventLog EventLog {get; set;}
+    public List<EventLog?> EventLog {get; set;}
 }

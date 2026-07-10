@@ -10,7 +10,8 @@ public class Patient
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int PatientId {get; set;}
-    [Required, Length(18, 18)]
+    [Required]
+    [StringLength(18, MinimumLength = 18, ErrorMessage = "The field must be exactly 18 characters long.")]
     public string CURP {get; set;}
     [Required, EmailAddress, MaxLength(150)]
     public string Email {get; set;}

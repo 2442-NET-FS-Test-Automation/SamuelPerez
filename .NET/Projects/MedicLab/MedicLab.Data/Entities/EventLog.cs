@@ -8,8 +8,8 @@ public class EventLog
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int EventLogId {get; set;}
-    public int AppointmentOrderId {get; set;}
-    public AppointmentOrder AppointmentOrder {get; set;}
+    public int? AppointmentOrderId {get; set;}
+    public AppointmentOrder? AppointmentOrder {get; set;}
     public string? Message { get; set; }
     public string? MessageTemplate { get; set; }
     
