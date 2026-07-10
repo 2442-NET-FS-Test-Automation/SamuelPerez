@@ -9,6 +9,7 @@ namespace MedicLab.Api.Fulfillment;
 public interface IFulfilmentService
 {
     public Task<BurstResult> FulfillmentBurstAsync(IEnumerable<int> orderIds, CancellationToken ct);
+    public Task<FulfilementResult> ProcessSingleOrderAsync(int orderId, CancellationToken ct);
 }
 
 public enum FulfilementResult { Fulfilled, Backordered}
@@ -32,7 +33,7 @@ public class FulfilmentService : IFulfilmentService
         );
     }
 
-    private async Task<FulfilementResult> ProcessSingleOrderAsync(int orderId, CancellationToken ct)
+    public async Task<FulfilementResult> ProcessSingleOrderAsync(int orderId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
         AppointmentOrder? appointmentOrder = await db.AppointmentOrders.Include(ao => ao.Details).FirstAsync(ao => ao.AppointmentOrderId == orderId, ct);

@@ -9,6 +9,7 @@ using Serilog.Sinks.MSSqlServer;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -122,10 +123,31 @@ app.MapGet("reports/fulfillment-rate", async (MedicLabDbContext db) =>
     return report ?? new { TotalProcessOrders = 0, FulfilledOrders = 0, BackorderedOrders = 0 };
 });
 
-// app.MapPost("/benchmark", async (int burstAmount, bool expedited, ISeeder seeder, IFulfilmentService service, MedicLabDbContext db) =>
-// {
-//    var ids1 = seeder. 
-// });
+app.MapPost("/benchmark", async (int burstAmount, bool expedited, ISeeder seeder, IFulfilmentService service, MedicLabDbContext db, CancellationToken ct) =>
+{
+   seeder.ResetAvailability();
+   IReadOnlyList<int> ids1 = seeder.SeedAppointmentOrders(burstAmount, expedited);
+
+   Stopwatch sw1 = Stopwatch.StartNew();
+   foreach(int id in ids1)
+    {
+        await service.ProcessSingleOrderAsync(id, ct);
+    }
+
+    sw1.Stop();
+
+    seeder.ResetAvailability();
+    IReadOnlyList<int> ids2 = seeder.SeedAppointmentOrders(burstAmount, expedited);
+    Stopwatch sw2 = Stopwatch.StartNew();
+    await service.FulfillmentBurstAsync(ids2, ct);
+    sw2.Stop();
+
+    return new
+    {
+        sequentialMs = sw1.ElapsedMilliseconds,
+        concurrentMs = sw2.ElapsedMilliseconds
+    };
+});
 
 app.Run();
 Log.CloseAndFlush();

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 public interface ISeeder
 {
     public IReadOnlyList<int> SeedAppointmentOrders(int ordersAmount, bool urgents);
+    public void ResetAvailability();
 }
 
 public class Seeder : ISeeder
