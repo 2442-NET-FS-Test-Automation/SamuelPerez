@@ -34,8 +34,8 @@ public class Seeder : ISeeder
                 Priority = urgents ? Priority.Expedited : Priority.Normal,
                 Status = Status.Pending,
                 Details  = { 
-                    new AppointmentDetail { ClinicalStudyId = sIds[LOINCs[Random.Shared.Next(0, LOINCs.Length)]], Quantity = Random.Shared.Next(1, 5), Date = new DateTime(2026,07,09)},
                     new AppointmentDetail { ClinicalStudyId = sIds[LOINCs[Random.Shared.Next(0, LOINCs.Length)]], Quantity = Random.Shared.Next(1, 5), Date = new DateTime(2026,07,10)},
+                    new AppointmentDetail { ClinicalStudyId = sIds[LOINCs[Random.Shared.Next(0, LOINCs.Length)]], Quantity = Random.Shared.Next(1, 5), Date = new DateTime(2026,07,11)},
                 }
             };
             db.AppointmentOrders.Add(appointmentOrder);
@@ -43,5 +43,32 @@ public class Seeder : ISeeder
             ids.Add(appointmentOrder.AppointmentOrderId);
         }
         return ids;
+    }
+
+    public void ResetAvailability()
+    {
+        using var db = _factory.CreateDbContext();
+
+        foreach ( Availability availability in db.Availability)
+        {
+            switch (availability.AvailabilityId)
+            {
+                case 1:
+                    availability.Slots = 20;
+                    break;
+                case 2:
+                    availability.Slots = 8;
+                    break;
+                case 3:
+                    availability.Slots = 15;
+                    break;
+                case 4:
+                    availability.Slots = 10;
+                    break;
+                default:
+                    break;
+            }
+        }
+        db.SaveChanges();
     }
 }

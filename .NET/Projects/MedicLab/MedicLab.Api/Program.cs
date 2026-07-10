@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Data;
 
@@ -50,6 +51,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 builder.Services.AddDbContextFactory<MedicLabDbContext>(options => options.UseSqlServer(conn_string));
+
 
 builder.Services.AddScoped<IFulfilmentService, FulfilmentService>();
 builder.Services.AddScoped<ISeeder, Seeder>();
@@ -120,7 +122,10 @@ app.MapGet("reports/fulfillment-rate", async (MedicLabDbContext db) =>
     return report ?? new { TotalProcessOrders = 0, FulfilledOrders = 0, BackorderedOrders = 0 };
 });
 
-
+// app.MapPost("/benchmark", async (int burstAmount, bool expedited, ISeeder seeder, IFulfilmentService service, MedicLabDbContext db) =>
+// {
+//    var ids1 = seeder. 
+// });
 
 app.Run();
 Log.CloseAndFlush();

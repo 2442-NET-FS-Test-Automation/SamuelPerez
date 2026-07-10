@@ -127,7 +127,7 @@ namespace MedicLab.Data.Migrations
                         {
                             AvailabilityId = 1,
                             ClinicalStudyId = 2,
-                            Day = new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Day = new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DurationMinutes = 10,
                             Slots = 20
                         },
@@ -135,15 +135,15 @@ namespace MedicLab.Data.Migrations
                         {
                             AvailabilityId = 2,
                             ClinicalStudyId = 3,
-                            Day = new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Day = new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DurationMinutes = 5,
-                            Slots = 3
+                            Slots = 8
                         },
                         new
                         {
                             AvailabilityId = 3,
                             ClinicalStudyId = 1,
-                            Day = new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Day = new DateTime(2026, 7, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DurationMinutes = 20,
                             Slots = 15
                         },
@@ -151,9 +151,9 @@ namespace MedicLab.Data.Migrations
                         {
                             AvailabilityId = 4,
                             ClinicalStudyId = 3,
-                            Day = new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Day = new DateTime(2026, 7, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DurationMinutes = 5,
-                            Slots = 4
+                            Slots = 10
                         });
                 });
 

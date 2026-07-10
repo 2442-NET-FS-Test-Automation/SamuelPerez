@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MedicLab.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class EntitiesCreated : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -49,7 +49,7 @@ namespace MedicLab.Data.Migrations
                 {
                     PatientId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CURP = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CURP = table.Column<string>(type: "nvarchar(18)", maxLength: 18, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -149,7 +149,7 @@ namespace MedicLab.Data.Migrations
                 {
                     EventLogId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    AppointmentOrderId = table.Column<int>(type: "int", nullable: false),
+                    AppointmentOrderId = table.Column<int>(type: "int", nullable: true),
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MessageTemplate = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Level = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
@@ -164,8 +164,7 @@ namespace MedicLab.Data.Migrations
                         name: "FK_EventLogs_AppointmentOrders_AppointmentOrderId",
                         column: x => x.AppointmentOrderId,
                         principalTable: "AppointmentOrders",
-                        principalColumn: "AppointmentOrderId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "AppointmentOrderId");
                 });
 
             migrationBuilder.CreateTable(
@@ -214,7 +213,7 @@ namespace MedicLab.Data.Migrations
                 values: new object[,]
                 {
                     { 1, new DateTime(2003, 3, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), "PEAS030328HJCRLMA4", "Samuelpalfaro@gmail.com", "Samuel", "Pérez" },
-                    { 2, new DateTime(1956, 6, 26, 0, 0, 0, 0, DateTimeKind.Unspecified), "SABC5560626MDFLRN09", "Concepcion@mail.com", "Concepción", "Salgado" }
+                    { 2, new DateTime(1956, 6, 26, 0, 0, 0, 0, DateTimeKind.Unspecified), "SABC5560626MDFLRN0", "Concepcion@mail.com", "Concepción", "Salgado" }
                 });
 
             migrationBuilder.InsertData(
@@ -222,10 +221,10 @@ namespace MedicLab.Data.Migrations
                 columns: new[] { "AvailabilityId", "ClinicalStudyId", "Day", "DurationMinutes", "Slots" },
                 values: new object[,]
                 {
-                    { 1, 2, new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified), 10, 20 },
-                    { 2, 3, new DateTime(2026, 7, 9, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, 3 },
-                    { 3, 1, new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), 20, 15 },
-                    { 4, 3, new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, 4 }
+                    { 1, 2, new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), 10, 20 },
+                    { 2, 3, new DateTime(2026, 7, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, 8 },
+                    { 3, 1, new DateTime(2026, 7, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), 20, 15 },
+                    { 4, 3, new DateTime(2026, 7, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, 10 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -249,9 +248,10 @@ namespace MedicLab.Data.Migrations
                 column: "PatientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Availability_ClinicalStudyId",
+                name: "IX_Availability_ClinicalStudyId_Day",
                 table: "Availability",
-                column: "ClinicalStudyId");
+                columns: new[] { "ClinicalStudyId", "Day" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "UQ_ClinicalStudies",
@@ -262,8 +262,7 @@ namespace MedicLab.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_EventLogs_AppointmentOrderId",
                 table: "EventLogs",
-                column: "AppointmentOrderId",
-                unique: true);
+                column: "AppointmentOrderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FulfillmentEvents_AppointmentOrderId",

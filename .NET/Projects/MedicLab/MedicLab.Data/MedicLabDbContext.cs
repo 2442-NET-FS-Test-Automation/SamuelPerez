@@ -57,10 +57,10 @@ public class MedicLabDbContext : DbContext
         );
 
         b.Entity<Availability>().HasData(
-            new Availability { AvailabilityId = 1, ClinicalStudyId = 2, DurationMinutes = 10, Slots = 20, Day = new DateTime(2026, 07, 09)},
-            new Availability { AvailabilityId = 2, ClinicalStudyId = 3, DurationMinutes = 5, Slots = 3, Day = new DateTime(2026, 07, 09)},
-            new Availability { AvailabilityId = 3, ClinicalStudyId = 1, DurationMinutes = 20, Slots = 15, Day = new DateTime(2026, 07, 10)},
-            new Availability { AvailabilityId = 4, ClinicalStudyId = 3, DurationMinutes = 5, Slots = 4, Day = new DateTime(2026, 07, 10)}
+            new Availability { AvailabilityId = 1, ClinicalStudyId = 2, DurationMinutes = 10, Slots = 20, Day = new DateTime(2026, 07, 10)},
+            new Availability { AvailabilityId = 2, ClinicalStudyId = 3, DurationMinutes = 5, Slots = 8, Day = new DateTime(2026, 07, 10)},
+            new Availability { AvailabilityId = 3, ClinicalStudyId = 1, DurationMinutes = 20, Slots = 15, Day = new DateTime(2026, 07, 11)},
+            new Availability { AvailabilityId = 4, ClinicalStudyId = 3, DurationMinutes = 5, Slots = 10, Day = new DateTime(2026, 07, 11)}
         );
 
     }
