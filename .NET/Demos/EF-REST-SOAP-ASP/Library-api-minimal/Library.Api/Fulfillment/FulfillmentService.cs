@@ -40,8 +40,6 @@ public class FulfillmentService : IFulfillmentService
         catch (KeyNotFoundException) {throw new UnknownSkuException(sku);}
     }
 
-    //public int ResolveProductId(string sku) => _skuToProductId[sku];
-
     public async Task<FulfillmentResult> FulfillOneAsync(int orderId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);

@@ -1,3 +1,6 @@
+using AutoMapper;
+using Library.ControllerApi.DTOs;
+using Library.ControllerApi.Services;
 using Library.Data;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,52 +9,95 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class InventoryController : ControllerBase
 {
-    private readonly IInventoryReposiory _repo;
+    private readonly IInventoryService _service;
+    private readonly IMapper _mapper;
 
-    public InventoryController(IInventoryReposiory repo)
+    public InventoryController(IInventoryService service, IMapper mapper)
     {
-        _repo = repo;
+        _service = service;
+        _mapper = mapper;
     }
 
     [HttpGet]
-    public async Task<ActionResult<EntireInventoryDTO>> Get()
+    public async Task<ActionResult<IEnumerable<InventoryDto>>> Get()
     {
-        // return Ok(await _repo.GetAllAsync());
-        var items = await _repo.GetAllAsync();
+        var items = await _service.AllAsync();
 
-        EntireInventoryDTO response = new();
+        var mappedItems =  _mapper.Map<List<InventoryDto>>(items);
 
-        foreach (var item in items)
-        {
-            InventoryReturnDTO i = new InventoryReturnDTO
-            {
-                Name = item.Product.Name,
-                Sku = item.Product.Sku,
-                CurrentStock = item.CurrentStock
-            };
+        return Ok(mappedItems);
 
-            response.EntireInventory.Add(i);
-        }
+        // // return Ok(await _repo.GetAllAsync());
+        // var items = await _repo.GetAllAsync();
 
-        return Ok(response.EntireInventory);
+        // EntireInventoryDTO response = new();
+
+        // foreach (var item in items)
+        // {
+        //     InventoryReturnDTO i = new InventoryReturnDTO
+        //     {
+        //         Name = item.Product.Name,
+        //         Sku = item.Product.Sku,
+        //         CurrentStock = item.CurrentStock
+        //     };
+
+        //     response.EntireInventory.Add(i);
+        // }
+
+        // return Ok(response.EntireInventory);
 
     }
 
     [HttpGet("{sku}")]
-    public async Task<ActionResult<InventoryReturnDTO>> GetBySku(string sku)
+    public async Task<ActionResult<InventoryDto>> GetBySku(string sku)
     {
-        var item = await _repo.GetInventoryItemBySkuAsync(sku);
+        var item = await _service.BySkuAsync(sku);
 
         if (item is null)
-            return NotFound();
-
-        var response = new InventoryReturnDTO
         {
-            Name = item.Product.Name,
-            Sku = item.Product.Sku,
-            CurrentStock = item.CurrentStock
-        };
+            return NotFound();
+        }
+        else
+        {
+            var mappedItem = _mapper.Map<InventoryDto>(item);
+            return Ok(mappedItem);
+        }
+        // var item = await _repo.GetInventoryItemBySkuAsync(sku);
 
-        return Ok(response);
+        // if (item is null)
+        //     return NotFound();
+
+        // var response = new InventoryReturnDTO
+        // {
+        //     Name = item.Product.Name,
+        //     Sku = item.Product.Sku,
+        //     CurrentStock = item.CurrentStock
+        // };
+
+        // return Ok(response);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<InventoryDto>> Create(InventoryCreateDto newInv)
+    {
+        var created = await _service.AddAsync(newInv);
+        var response = _mapper.Map<InventoryDto>(created);
+
+        return CreatedAtAction(nameof(GetBySku), new { sku = response.Sku}, response);
+    }
+
+    [HttpDelete("{sku}")]
+    public async Task<ActionResult> Delete(string sku)
+    {
+        bool isDeleted = await _service.RemoveAsync(sku);
+
+        if (isDeleted)
+        {
+            return NoContent();
+        }
+        else
+        {
+            return NotFound();
+        }
     }
 }

@@ -73,7 +73,7 @@ public class Seeder : ISeeder
 
         var ids = new List<int>(n);
 
-        for (var i = 0; i < 0; i++)
+        for (var i = 0; i < n; i++)
         {
             var order = new Order
             {
