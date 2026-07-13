@@ -1,9 +1,12 @@
+using System.Text;
 using Library.ControllerApi.Filters;
 using Library.ControllerApi.Mapping;
 using Library.ControllerApi.Middleware;
 using Library.ControllerApi.Services;
 using Library.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +30,25 @@ builder.Services.AddCors( o => o.AddPolicy(SpaCorsPolicy, p => p
     .AllowAnyHeader()
     .AllowAnyMethod()
 ));
+
+var jwtKey = builder.Configuration["Jwt:Key"];
+
+const string jwtIssuer = "library-fulfillment";
+const string jwtAudience = "library-fulfillment-clients";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true, ValidIssuer = jwtIssuer,
+        ValidateAudience = true, ValidAudience = jwtAudience,
+        ValidateIssuerSigningKey = true, IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ValidateLifetime = true
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+
+
 
 builder.Services.AddHttpClient<ISupplierClient, SupplierClient>(c =>
 {
@@ -88,11 +110,12 @@ app.UseResponseCaching();
 
 app.UseCors(SpaCorsPolicy);
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
-
-app.UseAuthorization();
 
 app.MapControllers();
 

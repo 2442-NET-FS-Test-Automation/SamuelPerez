@@ -2,6 +2,7 @@ using AutoMapper;
 using Library.ControllerApi.DTOs;
 using Library.ControllerApi.Services;
 using Library.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -124,6 +125,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet("{sku}/supplier-price")]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult> GetSupplierPrice(string sku)
     {
         var price = await _supplier.GetListPriceAsync(sku);
