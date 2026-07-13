@@ -70,6 +70,13 @@ app.UseSwaggerUI();
 
 app.MapGet("/", () => "Welcome to a Medical Laboratory!");
 
+app.MapPost("/inventory/seed", (MedicLabDbContext db, ISeeder seeder) =>
+{
+    seeder.ResetAvailability();
+    Log.Information("Slots reseted");
+    return Results.Ok("Slots reseted");
+});
+
 app.MapGet("/inventory", async (MedicLabDbContext db) =>
 {
     return await db.Availability.Where(a => a.Day >= DateTime.Today)
@@ -107,7 +114,47 @@ app.MapPost("/appointmentOrders/burst", (int burstAmount, bool expedited, ISeede
     return Results.Accepted("Request received");
 });
 
-app.MapGet("reports/fulfillment-rate", async (MedicLabDbContext db) =>
+app.MapGet("/reports/top-study", (MedicLabDbContext db) => {
+    var ranked = db.FulfillmentEvents
+            .Where(fe => fe.Type == "Fulfilled")
+            .Join(db.AppointmentDetails, fe => fe.AppointmentOrderId, ad => ad.AppointmentOrderId, (fe, ad) => ad)
+            .Join(db.ClinicalStudies, ad => ad.ClinicalStudyId, cs => cs.ClinicalStudyId, (ad, cs) => new {ad, cs})
+            .GroupBy(combined => new { combined.cs.ClinicalStudyId, combined.cs.LOINC })
+            .Select(g => new {StudyId = g.Key.ClinicalStudyId, LOINC = g.Key.LOINC, Units = g.Sum(ad => ad.ad.Quantity)})
+            .OrderByDescending(x => x.Units)
+            .ToList();
+    return ranked;
+});
+
+app.MapGet("/reports/top-patient", (MedicLabDbContext db) =>
+{
+    var ranked = db.FulfillmentEvents
+    .Where(fe => fe.Type == "Fulfilled")
+    .Join(db.AppointmentDetails, 
+        fe => fe.AppointmentOrderId, 
+        ad => ad.AppointmentOrderId, 
+        (fe, ad) => ad)
+    .Join(db.AppointmentOrders, 
+        ad => ad.AppointmentOrderId, 
+        ao => ao.AppointmentOrderId, 
+        (ad, ao) => new { ad, ao })
+    .Join(db.Patients, 
+        combined => combined.ao.PatientId, 
+        p => p.PatientId, 
+        (combined, p) => new { combined.ad, p })
+    .GroupBy(x => new { x.p.PatientId, x.p.FirstName, x.p.LastName })
+    .Select(g => new {
+        PatientFullName = g.Key.FirstName + " " + g.Key.LastName,
+        TotalUnits = g.Sum(x => x.ad.Quantity)
+    })
+    .OrderByDescending(x => x.TotalUnits)
+    .FirstOrDefault();
+    
+    return ranked ?? new {PatientFullName = "N/A", TotalUnits = 0};
+});
+
+
+app.MapGet("/reports/fulfillment-rate", async (MedicLabDbContext db) =>
 {
     var report = await db.AppointmentOrders
                         .Where(ao => ao.Status == Status.Completed || ao.Status == Status.Backordered)
@@ -145,7 +192,8 @@ app.MapPost("/benchmark", async (int burstAmount, bool expedited, ISeeder seeder
     return new
     {
         sequentialMs = sw1.ElapsedMilliseconds,
-        concurrentMs = sw2.ElapsedMilliseconds
+        concurrentMs = sw2.ElapsedMilliseconds,
+        SpeedupFactor = Math.Round((double)sw1.ElapsedMilliseconds / sw2.ElapsedMilliseconds, 2)
     };
 });
 
