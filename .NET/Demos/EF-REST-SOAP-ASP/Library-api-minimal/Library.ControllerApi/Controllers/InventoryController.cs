@@ -98,6 +98,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<InventoryDto>> Create(InventoryCreateDto newInv)
     {
         var created = await _service.AddAsync(newInv);
@@ -125,7 +126,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpGet("{sku}/supplier-price")]
-    [Authorize(Roles = "admin")]
+    [Authorize]
     public async Task<ActionResult> GetSupplierPrice(string sku)
     {
         var price = await _supplier.GetListPriceAsync(sku);

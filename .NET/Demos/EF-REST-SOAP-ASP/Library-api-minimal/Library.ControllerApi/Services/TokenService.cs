@@ -20,13 +20,13 @@ public class TokenService : ITokenService
         _key = config["Jwt:Key"];
     }
 
-    public string Issue(string user)
+    public string Issue(string user, string role)
     {
         var creds = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key)), SecurityAlgorithms.HmacSha256
         );
 
-        var role = Roles.GetValueOrDefault(user, "customer");
+        //var role = Roles.GetValueOrDefault(user, "customer");
 
         var token = new JwtSecurityToken("library-fulfillment", "library-fulfillment-clients",
             new[] {new Claim(ClaimTypes.Name, user), new Claim(ClaimTypes.Role, role)},
