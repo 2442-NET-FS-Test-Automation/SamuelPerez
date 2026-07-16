@@ -482,3 +482,5 @@ $RECYCLE.BIN/
 *.swp
 */appsettings.Development.json
 .NET/Demos/EF-REST-SOAP-ASP/Library-api-minimal/Library.ControllerApi/appsettings.Development.json
+
+*.bak

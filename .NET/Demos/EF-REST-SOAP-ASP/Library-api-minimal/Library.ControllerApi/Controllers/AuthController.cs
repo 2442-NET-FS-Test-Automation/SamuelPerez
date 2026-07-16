@@ -26,7 +26,7 @@ public class AuthController : ControllerBase
             return Conflict(new { error });
         }
 
-        return CreatedAtAction();
+        return CreatedAtAction(nameof(Me), null);
     }
 
     [HttpPost("login")]
@@ -55,7 +55,7 @@ public class AuthController : ControllerBase
     [HttpPost("token")]
     public ActionResult IssueToken(string userName)
     {
-        var userToken = _tokens.Issue(userName);
+        var userToken = _tokens.Issue(userName, "consumer");
         return Ok(userToken);
     }
 }

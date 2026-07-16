@@ -111,6 +111,7 @@ app.MapPost("/appointmentOrders/burst", (int burstAmount, bool expedited, ISeede
         }
     }, appStopping);
 
+    // Log.Information("")
     return Results.Accepted("Request received");
 });
 

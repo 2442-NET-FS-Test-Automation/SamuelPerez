@@ -8,8 +8,8 @@ namespace Library.ControllerApi.Services;
 public class UserService : IUserService
 {
     private readonly LibraryDbContext _db;
-    private readonly PasswordHasher<User> _hasher;
-    public UserService(LibraryDbContext db, PasswordHasher<User> hasher)
+    private readonly IPasswordHasher<User> _hasher;
+    public UserService(LibraryDbContext db, IPasswordHasher<User> hasher)
     {
         _db = db;
         _hasher = hasher;

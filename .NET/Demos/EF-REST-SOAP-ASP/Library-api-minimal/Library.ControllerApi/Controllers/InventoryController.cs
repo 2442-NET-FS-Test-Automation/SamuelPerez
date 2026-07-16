@@ -98,7 +98,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "admin")]
     public async Task<ActionResult<InventoryDto>> Create(InventoryCreateDto newInv)
     {
         var created = await _service.AddAsync(newInv);
@@ -110,6 +110,7 @@ public class InventoryController : ControllerBase
     }
 
     [HttpDelete("{sku}")]
+	[Authorize(Roles = "admin")]
     public async Task<ActionResult> Delete(string sku)
     {
         bool isDeleted = await _service.RemoveAsync(sku);

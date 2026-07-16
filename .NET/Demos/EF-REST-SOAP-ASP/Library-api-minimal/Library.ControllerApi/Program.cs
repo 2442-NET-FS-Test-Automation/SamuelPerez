@@ -28,7 +28,7 @@ builder.Host.UseSerilog();
 const string SpaCorsPolicy = "spa";
 
 builder.Services.AddCors( o => o.AddPolicy(SpaCorsPolicy, p => p
-    .WithOrigins("http://localhost:3000")
+    .WithOrigins("http://127.0.0.1:3000", "http://127.0.0.1:3000")
     .AllowAnyHeader()
     .AllowAnyMethod()
 ));
@@ -107,7 +107,7 @@ if (app.Environment.IsDevelopment())
 app.Use(async (ctx, next) =>
 {
     var sw = System.Diagnostics.Stopwatch.StartNew();
-    await next();
+    await next(ctx);
 
     sw.Stop();
     Log.Information("{Method} {Path} -> {StatusCode} in {Elapsed}",
