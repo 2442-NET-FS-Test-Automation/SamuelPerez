@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { InventoryItem } from "../types";
 
 interface BookCardProps {
@@ -8,7 +9,9 @@ interface BookCardProps {
 export function BookCard( {item, compact = false}: BookCardProps) {
     return(
         <article className="card">
-            <h3>{item.name}</h3>
+            <h3>
+                <Link to={`/inventory/${item.sku}`}>{item.name}</Link>
+            </h3>
             <dl>
                 <dt>SKU</dt>
                 <dd>{item.sku}</dd>
